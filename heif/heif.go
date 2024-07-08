@@ -27,7 +27,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/painterQ/goheif/heif/bmff"
+	"github.com/toyuanx/goheif/heif/bmff"
 )
 
 // File represents a HEIF file.

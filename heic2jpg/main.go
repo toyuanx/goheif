@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/painterQ/goheif"
+	"github.com/toyuanx/goheif"
 )
 
 // Skip Writer for exif writing

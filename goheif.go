@@ -8,8 +8,8 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/painterQ/goheif/heif"
-	"github.com/painterQ/goheif/libde265"
+	"github.com/toyuanx/goheif/heif"
+	"github.com/toyuanx/goheif/libde265"
 )
 
 // SafeEncoding uses more memory but seems to make
@@ -163,24 +163,56 @@ func Decode(r io.Reader) (image.Image, error) {
 			}
 
 			// copy y stride data
-			for i := 0; i < rect.Dy(); i += 1 {
-				copy(out.Y[(y*tileHeight+i)*out.YStride+x*ycc.YStride:], ycc.Y[i*ycc.YStride:(i+1)*ycc.YStride])
+			for i := 0; i < rect.Dy(); i++ {
+				srcStart := i * ycc.YStride
+				srcEnd := srcStart + ycc.YStride
+				if srcEnd > len(ycc.Y) {
+					srcEnd = len(ycc.Y)
+				}
+				dstStart := (y*tileHeight+i)*out.YStride + x*tileWidth
+				dstEnd := dstStart + tileWidth
+				if dstEnd > len(out.Y) {
+					dstEnd = len(out.Y)
+				}
+				copy(out.Y[dstStart:dstEnd], ycc.Y[srcStart:srcEnd])
 			}
 
 			// height of c strides
 			cHeight := len(ycc.Cb) / ycc.CStride
 
 			// copy c stride data
-			for i := 0; i < cHeight; i += 1 {
-				copy(out.Cb[(y*cHeight+i)*out.CStride+x*ycc.CStride:], ycc.Cb[i*ycc.CStride:(i+1)*ycc.CStride])
-				copy(out.Cr[(y*cHeight+i)*out.CStride+x*ycc.CStride:], ycc.Cr[i*ycc.CStride:(i+1)*ycc.CStride])
+			for i := 0; i < cHeight; i++ {
+				srcStartCb := i * ycc.CStride
+				srcEndCb := srcStartCb + ycc.CStride
+				if srcEndCb > len(ycc.Cb) {
+					srcEndCb = len(ycc.Cb)
+				}
+				srcStartCr := i * ycc.CStride
+				srcEndCr := srcStartCr + ycc.CStride
+				if srcEndCr > len(ycc.Cr) {
+					srcEndCr = len(ycc.Cr)
+				}
+
+				dstStartCb := (y*cHeight+i)*out.CStride + x*(tileWidth/2)
+				dstEndCb := dstStartCb + (tileWidth / 2)
+				if dstEndCb > len(out.Cb) {
+					dstEndCb = len(out.Cb)
+				}
+				dstStartCr := (y*cHeight+i)*out.CStride + x*(tileWidth/2)
+				dstEndCr := dstStartCr + (tileWidth / 2)
+				if dstEndCr > len(out.Cr) {
+					dstEndCr = len(out.Cr)
+				}
+
+				copy(out.Cb[dstStartCb:dstEndCb], ycc.Cb[srcStartCb:srcEndCb])
+				copy(out.Cr[dstStartCr:dstEndCr], ycc.Cr[srcStartCr:srcEndCr])
 			}
 
 			i += 1
 		}
 	}
 
-	//crop to actual size when applicable
+	// crop to actual size when applicable
 	out.Rect = image.Rectangle{image.Pt(0, 0), image.Pt(width, height)}
 	return out, nil
 }
